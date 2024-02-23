@@ -37,12 +37,12 @@ type Message struct {
 	} `json:"entities"`
 }
 
-type NewMessage struct {
+type OngoingMessage struct {
 	ChatId int    `json:"chat_id"`
 	Text   string `json:"text"`
 }
 
-func (message NewMessage) params() (*bytes.Buffer, error) {
+func (message OngoingMessage) params() (*bytes.Buffer, error) {
 	byteParams, err := json.Marshal(message)
 
 	return bytes.NewBuffer(byteParams), err
@@ -55,8 +55,8 @@ type Update struct {
 }
 
 type GetUpdatesParams struct {
-	Offset  int `json:"offset"`
-	Limit   int `json:"limit"`
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 	// Timeout int `json:"timeout"`
 }
 

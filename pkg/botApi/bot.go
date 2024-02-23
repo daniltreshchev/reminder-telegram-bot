@@ -40,7 +40,7 @@ func (bot BotAPI) GetMe() (User, error) {
 	return user, err
 }
 
-func (bot BotAPI) SendMessage(newMessage NewMessage) (Message, error) {
+func (bot BotAPI) SendMessage(newMessage OngoingMessage) (Message, error) {
 	var message Message
 	params, err := newMessage.params()
 
