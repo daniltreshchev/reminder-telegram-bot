@@ -8,7 +8,7 @@ type BotAPI struct {
 	Token string
 }
 
-func (bot BotAPI) GetUpdates(getUpdatesParams GetUpdatesParams) ([]Update, error) {
+func (bot BotAPI) GetUpdates(getUpdatesParams UpdateRequestParams) ([]Update, error) {
 	var updates []Update
 
 	params, err := getUpdatesParams.params()

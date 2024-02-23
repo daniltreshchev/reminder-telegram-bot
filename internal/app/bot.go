@@ -24,7 +24,7 @@ func Run() {
 
 	dispatcher.AddCommand(helpCommand)
 
-	params := botApi.GetUpdatesParams{Limit: 100}
+	params := botApi.UpdateRequestParams{Limit: 100}
 	for {
 		updates, err := bot.GetUpdates(params)
 

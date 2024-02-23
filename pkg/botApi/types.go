@@ -54,13 +54,13 @@ type Update struct {
 	Message  Message `json:"message"`
 }
 
-type GetUpdatesParams struct {
+type UpdateRequestParams struct {
 	Offset int `json:"offset"`
 	Limit  int `json:"limit"`
 	// Timeout int `json:"timeout"`
 }
 
-func (params GetUpdatesParams) params() (*bytes.Buffer, error) {
+func (params UpdateRequestParams) params() (*bytes.Buffer, error) {
 	byteParams, err := json.Marshal(params)
 
 	return bytes.NewBuffer(byteParams), err
