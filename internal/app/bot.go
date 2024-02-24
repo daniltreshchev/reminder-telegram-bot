@@ -7,7 +7,7 @@ import (
 	"practice-telegram-bot/pkg/types"
 )
 
-func Run(botApi api.API, botDispatcher dispatcher.Dispatcher, params types.UpdateRequestParams) {
+func Run(botApi api.API, botDispatcher *dispatcher.Dispatcher, params types.UpdateRequestParams) {
 	for {
 		updates, err := botApi.GetUpdates(params)
 
@@ -20,11 +20,14 @@ func Run(botApi api.API, botDispatcher dispatcher.Dispatcher, params types.Updat
 
 			command, err := botDispatcher.GetCommandByName(text)
 
-			if err != nil {
+			if err != nil && botDispatcher.CurrentChainLink == -1 {
+				continue
+			} else if botDispatcher.CurrentChainLink > -1 {
+				botDispatcher.CurrentChain.Handlers[botDispatcher.CurrentChainLink](update)
 				continue
 			}
 
-			go command.Handler(update, botApi)
+			command.Handler(update)
 		}
 
 		if len(updates) != 0 {
