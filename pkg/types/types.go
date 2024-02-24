@@ -1,4 +1,4 @@
-package botApi
+package types
 
 import (
 	"bytes"
@@ -42,7 +42,7 @@ type OngoingMessage struct {
 	Text   string `json:"text"`
 }
 
-func (message OngoingMessage) params() (*bytes.Buffer, error) {
+func (message OngoingMessage) Params() (*bytes.Buffer, error) {
 	byteParams, err := json.Marshal(message)
 
 	return bytes.NewBuffer(byteParams), err
@@ -60,7 +60,7 @@ type UpdateRequestParams struct {
 	// Timeout int `json:"timeout"`
 }
 
-func (params UpdateRequestParams) params() (*bytes.Buffer, error) {
+func (params UpdateRequestParams) Params() (*bytes.Buffer, error) {
 	byteParams, err := json.Marshal(params)
 
 	return bytes.NewBuffer(byteParams), err

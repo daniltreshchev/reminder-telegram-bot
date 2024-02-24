@@ -1,4 +1,4 @@
-package botApi
+package api
 
 import (
 	"bytes"
@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"practice-telegram-bot/pkg/types"
 )
 
-func parseApiResponse(resp *http.Response) (APIResponse, error) {
-	var apiResponse APIResponse
+func parseApiResponse(resp *http.Response) (types.APIResponse, error) {
+	var apiResponse types.APIResponse
 
 	defer resp.Body.Close()
 
@@ -22,18 +23,16 @@ func parseApiResponse(resp *http.Response) (APIResponse, error) {
 
 	err = json.Unmarshal(body, &apiResponse)
 
-	if err != nil {
-		return apiResponse, err
-	}
+	return apiResponse, err
 
 }
 
-func (bot BotAPI) makeApiUrl(method string) string {
-	return fmt.Sprintf("https://api.telegram.org/bot%s/%s", bot.Token, method)
+func (api API) makeApiUrl(method string) string {
+	return fmt.Sprintf("https://api.telegram.org/bot%s/%s", api.Token, method)
 }
 
-func (bot BotAPI) MakeGetApiCall(telegramMethod string) (APIResponse, error) {
-	var apiResponse APIResponse
+func (api API) MakeGetApiCall(telegramMethod string) (types.APIResponse, error) {
+	var apiResponse types.APIResponse
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -41,7 +40,7 @@ func (bot BotAPI) MakeGetApiCall(telegramMethod string) (APIResponse, error) {
 	client := &http.Client{Transport: tr}
 
 	resp, err := client.Get(
-		bot.makeApiUrl(telegramMethod),
+		api.makeApiUrl(telegramMethod),
 	)
 
 	if err != nil {
@@ -51,8 +50,8 @@ func (bot BotAPI) MakeGetApiCall(telegramMethod string) (APIResponse, error) {
 	return parseApiResponse(resp)
 }
 
-func (bot BotAPI) MakePostApiCall(telegramMethod string, params *bytes.Buffer) (APIResponse, error) {
-	var apiResponse APIResponse
+func (api API) MakePostApiCall(telegramMethod string, params *bytes.Buffer) (types.APIResponse, error) {
+	var apiResponse types.APIResponse
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -60,7 +59,7 @@ func (bot BotAPI) MakePostApiCall(telegramMethod string, params *bytes.Buffer) (
 	client := &http.Client{Transport: tr}
 
 	resp, err := client.Post(
-		bot.makeApiUrl(telegramMethod),
+		api.makeApiUrl(telegramMethod),
 		"application/json",
 		params,
 	)

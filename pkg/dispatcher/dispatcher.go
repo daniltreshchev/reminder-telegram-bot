@@ -1,14 +1,20 @@
-package services
+package dispatcher
 
 import (
 	"errors"
 	"fmt"
-	"practice-telegram-bot/pkg/botApi"
+	"practice-telegram-bot/pkg/api"
+	"practice-telegram-bot/pkg/types"
 )
 
 type Command struct {
 	Name    string
-	Handler func(event botApi.Update, api botApi.BotAPI)
+	Handler func(event types.Update, api api.API)
+}
+
+type Command1 struct {
+	Name    string
+	Handler func(event types.Update, api api.API)
 }
 
 type Dispatcher struct {

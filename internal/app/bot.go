@@ -2,10 +2,11 @@ package app
 
 import (
 	"fmt"
+	"practice-telegram-bot/internal/app/handlers"
 	"practice-telegram-bot/internal/config"
-	"practice-telegram-bot/internal/services"
-	"practice-telegram-bot/internal/services/handlers"
-	"practice-telegram-bot/pkg/botApi"
+	"practice-telegram-bot/pkg/api"
+	"practice-telegram-bot/pkg/dispatcher"
+	"practice-telegram-bot/pkg/types"
 )
 
 func Run() {
@@ -15,18 +16,18 @@ func Run() {
 		panic(err)
 	}
 
-	bot := botApi.BotAPI{Token: token}
-	dispatcher := services.Dispatcher{Commands: make(map[string]services.Command)}
+	botApi := api.API{Token: token}
+	botDispatcher := dispatcher.Dispatcher{Commands: make(map[string]dispatcher.Command)}
 
-	fmt.Println(bot.GetMe())
+	fmt.Println(botApi.GetMe())
 
-	helpCommand := services.Command{Name: "help", Handler: func(event botApi.Update, api botApi.BotAPI) { handlers.Hello(event, api) }}
+	helpCommand := dispatcher.Command{Name: "help", Handler: func(event types.Update, api api.API) { handlers.Hello(event, api) }}
 
-	dispatcher.AddCommand(helpCommand)
+	botDispatcher.AddCommand(helpCommand)
 
-	params := botApi.UpdateRequestParams{Limit: 100}
+	params := types.UpdateRequestParams{Limit: 100}
 	for {
-		updates, err := bot.GetUpdates(params)
+		updates, err := botApi.GetUpdates(params)
 
 		if err != nil {
 			fmt.Println(err)
@@ -35,13 +36,13 @@ func Run() {
 		for _, update := range updates {
 			text := update.Message.Text
 
-			command, err := dispatcher.GetCommandByName(text)
+			command, err := botDispatcher.GetCommandByName(text)
 
 			if err != nil {
 				continue
 			}
 
-			go command.Handler(update, bot)
+			go command.Handler(update, botApi)
 		}
 
 		if len(updates) != 0 {
