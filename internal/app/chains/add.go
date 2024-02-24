@@ -11,7 +11,7 @@ func AddChainFirstPhrase(event types.Update, api api.API, dispatcher *dispatcher
 
 	_, err := api.SendMessage(message)
 
-	dispatcher.NextChainStep()
+	dispatcher.NextChainStep(event.Message.From)
 
 	return err
 }
@@ -21,7 +21,7 @@ func AddChainSecondPhrase(event types.Update, api api.API, dispatcher *dispatche
 
 	_, err := api.SendMessage(message)
 
-	dispatcher.NextChainStep()
+	dispatcher.NextChainStep(event.Message.From)
 
 	return err
 }
@@ -31,7 +31,7 @@ func AddChainThirdPhrase(event types.Update, api api.API, dispatcher *dispatcher
 
 	_, err := api.SendMessage(message)
 
-	dispatcher.ClearCurrentChain()
+	dispatcher.ClearCurrentChain(event.Message.From)
 
 	return err
 }

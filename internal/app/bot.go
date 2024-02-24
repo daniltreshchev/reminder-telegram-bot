@@ -17,13 +17,13 @@ func Run(botApi api.API, botDispatcher *dispatcher.Dispatcher, params types.Upda
 
 		for _, update := range updates {
 			text := update.Message.Text
-
+			userID := update.Message.From.ID
 			command, err := botDispatcher.GetCommandByName(text)
 
-			if err != nil && botDispatcher.CurrentChainLink == -1 {
+			if err != nil && botDispatcher.CurrentChainLink[userID] == 0 {
 				continue
-			} else if botDispatcher.CurrentChainLink > -1 {
-				botDispatcher.CurrentChain.Handlers[botDispatcher.CurrentChainLink](update)
+			} else if len(botDispatcher.CurrentChainLink) > 0 && botDispatcher.CurrentChainLink[userID] > 0 {
+				botDispatcher.CurrentChain[userID].Handlers[botDispatcher.CurrentChainLink[userID]-1](update)
 				continue
 			}
 

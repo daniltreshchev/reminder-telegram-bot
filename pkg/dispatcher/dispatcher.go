@@ -11,8 +11,8 @@ type Dispatcher struct {
 	Chains   []Chain
 
 	ChainCommandMap  map[string]Chain
-	CurrentChain     Chain
-	CurrentChainLink int
+	CurrentChain     map[int]Chain
+	CurrentChainLink map[int]int
 }
 
 type Command struct {
@@ -26,7 +26,7 @@ type Chain struct {
 }
 
 func NewDispatcher() Dispatcher {
-	return Dispatcher{Commands: make(map[string]Command), Chains: make([]Chain, 0), ChainCommandMap: make(map[string]Chain), CurrentChainLink: -1}
+	return Dispatcher{Commands: make(map[string]Command), Chains: make([]Chain, 0), ChainCommandMap: make(map[string]Chain), CurrentChainLink: make(map[int]int), CurrentChain: make(map[int]Chain)}
 }
 
 func (d *Dispatcher) AddChain(chain Chain) {
@@ -42,24 +42,24 @@ func (d *Dispatcher) AddChains(chains []Chain) {
 	}
 }
 
-func (d *Dispatcher) StartChain(command Command) {
-	d.CurrentChain = d.ChainCommandMap[command.Name]
-	d.CurrentChainLink = 0
+func (d *Dispatcher) StartChain(command Command, user types.User) {
+	d.CurrentChain[user.ID] = d.ChainCommandMap[command.Name]
+	d.CurrentChainLink[user.ID] = 1
 }
 
-func (d *Dispatcher) NextChainStep() error {
-	d.CurrentChainLink += 1
+func (d *Dispatcher) NextChainStep(user types.User) error {
+	d.CurrentChainLink[user.ID] += 1
 
-	if d.CurrentChainLink > len(d.CurrentChain.Handlers) {
+	if d.CurrentChainLink[user.ID] > len(d.CurrentChain[user.ID].Handlers) {
 		return errors.New("next step unreachable")
 	}
 
 	return nil
 }
 
-func (d *Dispatcher) ClearCurrentChain() {
-	d.CurrentChain = Chain{}
-	d.CurrentChainLink = -1
+func (d *Dispatcher) ClearCurrentChain(user types.User) {
+	d.CurrentChain[user.ID] = Chain{}
+	d.CurrentChainLink[user.ID] = 0
 }
 
 func (d *Dispatcher) AddCommand(command Command) {

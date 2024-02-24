@@ -18,7 +18,7 @@ func Add(event types.Update, api api.API, dispatcher *dispatcher.Dispatcher) err
 
 	command, _ := dispatcher.GetCommandByName(message)
 
-	dispatcher.StartChain(command)
+	dispatcher.StartChain(command, event.Message.From)
 
 	return nil
 }
