@@ -37,7 +37,7 @@ type Chain struct {
 func NewDispatcher() Dispatcher {
 	return Dispatcher{
 		Commands:         make(map[string]Command),
-		Chains:           make(map[string][]Chain),
+		Chains:           make(map[string]Chain),
 		ChainCommandMap:  make(map[string]Chain),
 		CurrentChainLink: make(map[int]int),
 		CurrentChain:     make(map[int]string),
@@ -53,16 +53,11 @@ func NewRedisDispatcher(redisUrl string) Dispatcher {
 		return NewDispatcher()
 	}
 
-	return Dispatcher{
-		Commands:         make(map[string]Command),
-		Chains:           make(map[string][]Chain),
-		ChainCommandMap:  make(map[string]Chain),
-		CurrentChain:     make(map[int]string),
-		CurrentChainLink: make(map[int]int),
-		useRedis:         true,
-		redisClient:      redisClient,
-		backgroudContext: context.Background(),
-	}
+	redisDispatcher := NewDispatcher()
+	redisDispatcher.redisClient = redisClient
+	redisDispatcher.useRedis = true
+	
+	return redisDispatcher
 }
 
 func (d *Dispatcher) AddChain(chain Chain) {
