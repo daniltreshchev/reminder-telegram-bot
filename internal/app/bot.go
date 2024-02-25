@@ -23,7 +23,11 @@ func Run(botApi api.API, botDispatcher *dispatcher.Dispatcher, params types.Upda
 			if err != nil && botDispatcher.CurrentChainLink[userID] == 0 {
 				continue
 			} else if len(botDispatcher.CurrentChainLink) > 0 && botDispatcher.CurrentChainLink[userID] > 0 {
-				botDispatcher.CurrentChain[userID].Handlers[botDispatcher.CurrentChainLink[userID]-1](update)
+				// botDispatcher.Chains
+
+				currentChainName = botDispatcher.CurrentChain[userID]
+
+				botDispatcher.Chains[currentChainName][0].Handlers
 				continue
 			}
 

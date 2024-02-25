@@ -20,7 +20,7 @@ func main() {
 
 	botApi := api.API{Token: token}
 	botDispatcher := dispatcher.NewDispatcher()
-
+	
 	fmt.Println(botApi.GetMe())
 
 	helpCommand := dispatcher.Command{Name: "help", Handler: func(event types.Update) { handlers.Hello(event, botApi, &botDispatcher) }}
