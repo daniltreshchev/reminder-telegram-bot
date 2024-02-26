@@ -2,36 +2,35 @@ package dispatcher
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"practice-telegram-bot/pkg/state"
 	"practice-telegram-bot/pkg/types"
-	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Dispatcher struct {
-	Commands         map[string]Command
-	Chains           map[string]Chain
-	ChainCommandMap  map[string]Chain
-	CurrentChain     map[int]string
-	CurrentChainLink map[int]int
-
-	useRedis         bool
-	redisClient      *redis.Client
-	backgroudContext context.Context
+	Commands         map[string]Command `json:"commands"`
+	Chains           map[string]Chain   `json:"chains"`
+	ChainCommandMap  map[string]Chain   `json:"chain_command_map"`
+	CurrentChain     map[int]string     `json:"current_chain"`
+	CurrentChainLink map[int]int        `json:"current_chain_link"`
+	useRedis         bool               `json:"-"`
+	redisClient      *redis.Client      `json:"-"`
+	backgroudContext context.Context    `json:"-"`
 }
 
 type Command struct {
-	Name    string
-	Handler func(update types.Update)
+	Name    string                    `json:"name"`
+	Handler func(update types.Update) `json:"-"`
 }
 
 type Chain struct {
-	Name              string
-	StartChainCommand Command
-	Handlers          []func(event types.Update)
+	Name              string                     `json:"name"`
+	StartChainCommand Command                    `json:"start_chain_command"`
+	Handlers          []func(event types.Update) `json:"-"`
 }
 
 func NewDispatcher() Dispatcher {
@@ -42,6 +41,7 @@ func NewDispatcher() Dispatcher {
 		CurrentChainLink: make(map[int]int),
 		CurrentChain:     make(map[int]string),
 		useRedis:         false,
+		backgroudContext: context.Background(),
 	}
 }
 
@@ -56,14 +56,49 @@ func NewRedisDispatcher(redisUrl string) Dispatcher {
 	redisDispatcher := NewDispatcher()
 	redisDispatcher.redisClient = redisClient
 	redisDispatcher.useRedis = true
-	
+
 	return redisDispatcher
 }
 
-func (d *Dispatcher) AddChain(chain Chain) {
-	d.Chains[chain.Name] = append(d.Chains[chain.Name], chain)
-	d.AddCommand(chain.StartChainCommand)
+func (d *Dispatcher) SaveRedisState() {
+	if !d.useRedis {
+		return
+	}
 
+	dispatcherBinary, err := json.Marshal(d)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	d.redisClient.Set(d.backgroudContext, "dispatcher_state", dispatcherBinary, 0)
+}
+
+func (d *Dispatcher) GetRedisState() {
+	if !d.useRedis {
+		return
+	}
+
+	dispatcherBinary, err := d.redisClient.Get(d.backgroudContext, "dispatcher_state").Result()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = json.Unmarshal([]byte(dispatcherBinary), &d)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+func (d *Dispatcher) AddChain(chain Chain) {
+	d.GetRedisState()
+	d.Chains[chain.Name] = chain
+	d.AddCommand(chain.StartChainCommand)
 	d.ChainCommandMap[chain.StartChainCommand.Name] = chain
 }
 
@@ -74,46 +109,33 @@ func (d *Dispatcher) AddChains(chains []Chain) {
 }
 
 func (d *Dispatcher) StartChain(command Command, user types.User) {
+	d.GetRedisState()
 	d.CurrentChain[user.ID] = d.ChainCommandMap[command.Name].Name
-	d.CurrentChainLink[user.ID] = 1
-}
-
-func (d *Dispatcher) NextChainStepRedis(user types.User) error {
-	currentChainLinkOld, err := d.redisClient.Get(d.backgroudContext, strconv.Itoa(user.ID)).Result()
-
-	if err != nil {
-		return err
-	}
-
-	currentChainLink, _ := strconv.Atoi(currentChainLinkOld)
-
-	// if currentChainLink+1 > len() {
-
-	// }
-
-	err = d.redisClient.Set(d.backgroudContext, strconv.Itoa(user.ID), currentChainLink+1, 0).Err()
-
-	return err
+	d.CurrentChainLink[user.ID] = 0
+	d.SaveRedisState()
 }
 
 func (d *Dispatcher) NextChainStep(user types.User) error {
-	// err := NextChainStepRedis(user)
-
+	d.GetRedisState()
 	d.CurrentChainLink[user.ID] += 1
-	if d.CurrentChainLink[user.ID] > len(d.Chains[d.CurrentChain[user.ID]]) {
+	if d.CurrentChainLink[user.ID] > len(d.Chains[d.CurrentChain[user.ID]].Handlers) {
 		return errors.New("next step unreachable")
 	}
-
+	d.SaveRedisState()
 	return nil
 }
 
 func (d *Dispatcher) ClearCurrentChain(user types.User) {
-	d.CurrentChain[user.ID] = ""
-	d.CurrentChainLink[user.ID] = 0
+	d.GetRedisState()
+	delete(d.CurrentChain, user.ID)
+	delete(d.CurrentChainLink, user.ID)
+	d.SaveRedisState()
 }
 
 func (d *Dispatcher) AddCommand(command Command) {
+	d.GetRedisState()
 	d.Commands[fmt.Sprintf("/%s", command.Name)] = command
+	d.SaveRedisState()
 }
 
 func (d *Dispatcher) AddCommands(commands []Command) {

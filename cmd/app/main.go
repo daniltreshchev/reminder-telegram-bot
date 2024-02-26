@@ -19,14 +19,15 @@ func main() {
 	}
 
 	botApi := api.API{Token: token}
-	botDispatcher := dispatcher.NewDispatcher()
-	
+	botDispatcher := dispatcher.NewRedisDispatcher("redis://localhost:6379")
+
 	fmt.Println(botApi.GetMe())
 
 	helpCommand := dispatcher.Command{Name: "help", Handler: func(event types.Update) { handlers.Hello(event, botApi, &botDispatcher) }}
 	addCommand := dispatcher.Command{Name: "add", Handler: func(event types.Update) { handlers.Add(event, botApi, &botDispatcher) }}
 
 	addChain := dispatcher.Chain{
+		Name:              "addChain",
 		StartChainCommand: addCommand,
 		Handlers: []func(event types.Update){
 			func(event types.Update) { chains.AddChainFirstPhrase(event, botApi, &botDispatcher) },
